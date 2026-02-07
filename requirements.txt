@@ -1,0 +1,67 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Backtesting & Trading
+backtesting
+vectorbt
+TA-Lib
+pandas-ta
+ta
+
+# Data & Analysis
+pandas
+numpy
+scipy
+
+# Market Data
+ccxt
+yfinance
+
+# Optimization Algorithms
+scikit-optimize
+deap
+optuna
+
+# Database
+sqlalchemy
+psycopg2-binary
+alembic
+
+# Caching & Queue
+redis
+celery
+kombu
+
+# Storage
+boto3
+minio
+
+# Monitoring & Logging
+python-json-logger
+sentry-sdk
+
+# Security
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# Utilities
+python-dotenv
+httpx
+aiofiles
+cachetools
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+faker
+
+# Development
+black
+flake8
+isort
+mypy
