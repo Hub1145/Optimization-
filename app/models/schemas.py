@@ -24,8 +24,6 @@ class DataConfig(BaseModel):
     start_date: date
     end_date: date
     timeframe: Timeframe = Timeframe.DAY_1
-    provider: Literal["crypto", "stock", "forex"] = "crypto"
-    exchange: Optional[str] = "binance"
 
 class OptimizationConfig(BaseModel):
     objective: Objective = Objective.SHARPE_RATIO

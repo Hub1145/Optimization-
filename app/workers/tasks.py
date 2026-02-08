@@ -25,18 +25,14 @@ def get_data_sync(data_config):
             data_config['symbol'],
             data_config['start_date'],
             data_config['end_date'],
-            data_config['timeframe'],
-            data_config['provider'],
-            data_config.get('exchange', 'binance')
+            data_config['timeframe']
         ))
     else:
         return asyncio.run(market_data.get_data(
             data_config['symbol'],
             data_config['start_date'],
             data_config['end_date'],
-            data_config['timeframe'],
-            data_config['provider'],
-            data_config.get('exchange', 'binance')
+            data_config['timeframe']
         ))
 
 @celery_app.task(name="run_grid_search")

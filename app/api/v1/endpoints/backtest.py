@@ -29,9 +29,7 @@ async def run_single_backtest(
         data_config.symbol,
         str(data_config.start_date),
         str(data_config.end_date),
-        data_config.timeframe,
-        data_config.provider,
-        data_config.exchange
+        data_config.timeframe
     )
 
     if df.empty:

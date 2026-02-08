@@ -26,7 +26,14 @@ optimization-api/
 - **Walk-Forward Analysis**: Robustness validation using rolling windows to prevent overfitting.
 - **Monte Carlo Simulation**: Stress testing by trade order randomization.
 
-### 2. Data Usage Limits
+### 2. Crypto Focus & Flexible Timeframes
+The API currently focuses on **Crypto data** fetched from **Binance** via CCXT. It supports a wide range of timeframes:
+- **Minutes**: `1m`, `3m`, `5m`, `15m`, `30m`
+- **Hours**: `1h`, `2h`, `4h`, `6h`, `8h`, `12h`
+- **Days**: `1d`, `3d`
+- **Weeks/Months**: `1w`, `1M`
+
+### 3. Data Usage Limits
 To ensure high performance and prevent long optimization times, the API enforces historical data limits:
 - **Maximum Data Range**: 365 days (configurable in `config.json` via `MAX_DATA_DAYS`).
 - This limit applies to both single backtests and all optimization methods.
@@ -37,11 +44,11 @@ The API calculates and returns professional-grade metrics:
 - **Trade Statistics**: Total Trades, Winning/Losing counts, Avg Win/Loss, Max Win/Loss Streaks, Avg Duration.
 - **Risk Metrics**: Value at Risk (VaR 95%), Conditional VaR (CVaR).
 
-### 3. ML-Powered Strategy Selection
+### 4. ML-Powered Strategy Selection
 Utilizes a weighted normalization model to score strategies:
 `Score = (Profit * 0.35) + (WinRate * 0.25) + (ProfitFactor * 0.25) - (LossStreak * 0.15)`
 
-### 4. Real-time Monitoring
+### 5. Real-time Monitoring
 WebSocket support for streaming job progress and status updates:
 `ws://[host]/api/v1/optimization/{job_id}/stream`
 
