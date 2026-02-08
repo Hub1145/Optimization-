@@ -19,6 +19,7 @@ class Settings(BaseModel):
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
     SECRET_KEY: str = "secret"
+    MAX_DATA_DAYS: int = 365
 
     @classmethod
     def load(cls):

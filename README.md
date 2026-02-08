@@ -26,7 +26,12 @@ optimization-api/
 - **Walk-Forward Analysis**: Robustness validation using rolling windows to prevent overfitting.
 - **Monte Carlo Simulation**: Stress testing by trade order randomization.
 
-### 2. Comprehensive Metrics
+### 2. Data Usage Limits
+To ensure high performance and prevent long optimization times, the API enforces historical data limits:
+- **Maximum Data Range**: 365 days (configurable in `config.json` via `MAX_DATA_DAYS`).
+- This limit applies to both single backtests and all optimization methods.
+
+### 3. Comprehensive Metrics
 The API calculates and returns professional-grade metrics:
 - **Performance**: Total Return, Sharpe Ratio, Sortino Ratio, Calmar Ratio, Profit Factor, Win Rate.
 - **Trade Statistics**: Total Trades, Winning/Losing counts, Avg Win/Loss, Max Win/Loss Streaks, Avg Duration.

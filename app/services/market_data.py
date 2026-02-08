@@ -4,6 +4,8 @@ import yfinance as yf
 from datetime import datetime
 from typing import Optional, Literal
 import asyncio
+from app.config import settings
+from app.utils.validators import validate_date_range
 
 class MarketDataService:
     """Service for fetching market data"""
@@ -18,6 +20,9 @@ class MarketDataService:
         """
         Fetch OHLCV data
         """
+        # Validate data range
+        validate_date_range(start_date, end_date, settings.MAX_DATA_DAYS)
+
         if provider == "crypto":
             return await self._get_crypto_data(symbol, timeframe, start_date, end_date, exchange)
         else:

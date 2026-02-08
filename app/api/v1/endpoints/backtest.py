@@ -3,6 +3,8 @@ from app.models.schemas import StrategyDefinition, DataConfig, PerformanceMetric
 from app.services.market_data import MarketDataService
 from app.core.backtesting.engine import BacktestingEngine
 from app.core.strategies import get_strategy_class
+from app.utils.validators import validate_date_range
+from app.config import settings
 import pandas as pd
 
 router = APIRouter()
@@ -16,6 +18,12 @@ async def run_single_backtest(
     commission: float = 0.001,
     slippage: float = 0.0005
 ):
+    # Early validation
+    try:
+        validate_date_range(data_config.start_date, data_config.end_date, settings.MAX_DATA_DAYS)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     market_data = MarketDataService()
     df = await market_data.get_data(
         data_config.symbol,

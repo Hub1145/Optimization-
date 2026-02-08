@@ -5,6 +5,8 @@ from app.models.database import OptimizationJob, StrategyConfig, User
 from app.workers.tasks import run_grid_search, run_genetic_optimization, run_walk_forward
 from app.models.enums import JobStatus, OptimizationType
 from app.dependencies import get_db
+from app.utils.validators import validate_date_range
+from app.config import settings
 from datetime import datetime
 import uuid
 
@@ -21,6 +23,11 @@ def get_or_create_default_user(db: Session):
 
 @router.post("/start", response_model=JobStatusResponse)
 def start_optimization(request: GridSearchRequest, db: Session = Depends(get_db)):
+    try:
+        validate_date_range(request.data.start_date, request.data.end_date, settings.MAX_DATA_DAYS)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     user = get_or_create_default_user(db)
     job = OptimizationJob(
         id=uuid.uuid4(),
@@ -56,6 +63,11 @@ def start_optimization(request: GridSearchRequest, db: Session = Depends(get_db)
 
 @router.post("/genetic/start", response_model=JobStatusResponse)
 def start_genetic_optimization(request: GeneticAlgorithmRequest, db: Session = Depends(get_db)):
+    try:
+        validate_date_range(request.data.start_date, request.data.end_date, settings.MAX_DATA_DAYS)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     user = get_or_create_default_user(db)
     job = OptimizationJob(
         id=uuid.uuid4(),
@@ -77,6 +89,11 @@ def start_genetic_optimization(request: GeneticAlgorithmRequest, db: Session = D
 
 @router.post("/walk-forward/start", response_model=JobStatusResponse)
 def start_walk_forward_optimization(request: WalkForwardRequest, db: Session = Depends(get_db)):
+    try:
+        validate_date_range(request.data.start_date, request.data.end_date, settings.MAX_DATA_DAYS)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     user = get_or_create_default_user(db)
     job = OptimizationJob(
         id=uuid.uuid4(),
