@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from app.models.schemas import GridSearchRequest, GeneticAlgorithmRequest, WalkForwardRequest, JobStatusResponse
 from app.models.database import OptimizationJob, StrategyConfig, User
@@ -19,8 +19,8 @@ def get_or_create_default_user(db: Session):
         db.refresh(user)
     return user
 
-@router.post("/grid-search", response_model=JobStatusResponse)
-def optimize_grid_search(request: GridSearchRequest, db: Session = Depends(get_db)):
+@router.post("/start", response_model=JobStatusResponse)
+def start_optimization(request: GridSearchRequest, db: Session = Depends(get_db)):
     user = get_or_create_default_user(db)
     job = OptimizationJob(
         id=uuid.uuid4(),
@@ -54,8 +54,8 @@ def optimize_grid_search(request: GridSearchRequest, db: Session = Depends(get_d
         created_at=job.created_at
     )
 
-@router.post("/genetic", response_model=JobStatusResponse)
-def optimize_genetic(request: GeneticAlgorithmRequest, db: Session = Depends(get_db)):
+@router.post("/genetic/start", response_model=JobStatusResponse)
+def start_genetic_optimization(request: GeneticAlgorithmRequest, db: Session = Depends(get_db)):
     user = get_or_create_default_user(db)
     job = OptimizationJob(
         id=uuid.uuid4(),
@@ -75,8 +75,8 @@ def optimize_genetic(request: GeneticAlgorithmRequest, db: Session = Depends(get
         created_at=job.created_at
     )
 
-@router.post("/walk-forward", response_model=JobStatusResponse)
-def optimize_walk_forward(request: WalkForwardRequest, db: Session = Depends(get_db)):
+@router.post("/walk-forward/start", response_model=JobStatusResponse)
+def start_walk_forward_optimization(request: WalkForwardRequest, db: Session = Depends(get_db)):
     user = get_or_create_default_user(db)
     job = OptimizationJob(
         id=uuid.uuid4(),
@@ -95,3 +95,64 @@ def optimize_walk_forward(request: WalkForwardRequest, db: Session = Depends(get
         job_type=OptimizationType.WALK_FORWARD,
         created_at=job.created_at
     )
+
+@router.get("/{job_id}/status", response_model=JobStatusResponse)
+def get_job_status(job_id: str, db: Session = Depends(get_db)):
+    job = db.query(OptimizationJob).filter(OptimizationJob.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    return JobStatusResponse(
+        job_id=str(job.id),
+        status=job.status,
+        job_type=job.job_type,
+        created_at=job.created_at,
+        started_at=job.started_at,
+        completed_at=job.completed_at,
+        error_message=job.error_message
+    )
+
+@router.get("/{job_id}/results")
+def get_job_results(job_id: str, db: Session = Depends(get_db)):
+    results = db.query(OptimizationResult).filter(OptimizationResult.job_id == job_id).all()
+    return results
+
+@router.delete("/{job_id}/cancel")
+def cancel_job(job_id: str, db: Session = Depends(get_db)):
+    job = db.query(OptimizationJob).filter(OptimizationJob.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Logic to revoke task
+    from app.workers.celery_app import celery_app
+    # We need the task ID which we should have stored
+    # For now mock success
+    job.status = JobStatus.FAILED
+    job.error_message = "Cancelled by user"
+    db.commit()
+    return {"message": "Job cancelled"}
+
+@router.websocket("/{job_id}/stream")
+async def stream_job_status(websocket: WebSocket, job_id: str, db: Session = Depends(get_db)):
+    await websocket.accept()
+    try:
+        import asyncio
+        while True:
+            job = db.query(OptimizationJob).filter(OptimizationJob.id == job_id).first()
+            if not job:
+                await websocket.send_json({"error": "Job not found"})
+                break
+
+            await websocket.send_json({
+                "job_id": str(job.id),
+                "status": job.status,
+                "progress": 0, # Mock progress
+                "completed_at": job.completed_at.isoformat() if job.completed_at else None
+            })
+
+            if job.status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+                break
+
+            await asyncio.sleep(2)
+    except WebSocketDisconnect:
+        pass

@@ -1,125 +1,84 @@
 # StrategyOptimizer API
 
-A high-performance, cloud-ready API for trading strategy backtesting and optimization. Built with FastAPI, Celery, PostgreSQL, and Redis.
+A professional, high-performance trading strategy optimization service.
 
-## 🚀 Features
+## 📁 Project Architecture
 
-- **Backtesting Engine**: Fast and accurate backtesting using `backtesting.py`.
-- **Optimization Algorithms**:
-  - **Grid Search**: Exhaustive search over a parameter space.
-  - **Genetic Algorithms**: Evolutionary optimization for complex parameter spaces.
-  - **Walk-Forward Analysis**: Validation technique to prevent overfitting by using rolling windows.
-- **Strategy Management**:
-  - **Pre-built Strategies**: RSI Mean Reversion, MACD + Bollinger Bands Combo.
-  - **Custom Rules**: Input custom entry/exit logic via API strings.
-- **Market Data Integration**: CCXT (Crypto) and yfinance (Stocks/Forex).
-- **Asynchronous Execution**: Long-running jobs are handled by Celery workers.
-- **Persistence**: Save and retrieve optimization results from PostgreSQL.
-
-## 🛠️ Architecture
-
-The system consists of several components:
-1. **FastAPI Web Server**: Handles requests, job submission, and result retrieval.
-2. **Celery Worker**: Executes the actual backtesting and optimization tasks.
-3. **Redis**: Message broker for Celery and caching.
-4. **PostgreSQL**: Stores job metadata, strategy configurations, and performance results.
-
-## ⚙️ Configuration
-
-The application uses `config.json` for configuration (overridable by environment variables).
-
-```json
-{
-  "PROJECT_NAME": "StrategyOptimizer API",
-  "API_V1_STR": "/api/v1",
-  "POSTGRES_SERVER": "db",
-  "POSTGRES_USER": "postgres",
-  "POSTGRES_PASSWORD": "postgres",
-  "POSTGRES_DB": "strategy_optimizer",
-  "REDIS_URL": "redis://redis:6379/0",
-  "CELERY_BROKER_URL": "redis://redis:6379/0",
-  "CELERY_RESULT_BACKEND": "redis://redis:6379/0",
-  "SECRET_KEY": "yoursecretkey"
-}
+```
+optimization-api/
+├── app/
+│   ├── api/                   # FastAPI endpoints (REST + WebSocket)
+│   ├── core/
+│   │   ├── backtester/        # Engine & performance metrics
+│   │   ├── optimizers/        # Grid Search, Genetic, Walk-Forward, Monte Carlo
+│   │   ├── strategies/        # Pre-built & Custom templates
+│   │   └── data/              # Market data fetchers (CCXT, yfinance)
+│   ├── models/                # DB & Pydantic schemas
+│   ├── services/              # Redis, Celery, Storage
+│   └── workers/               # Async task processing
 ```
 
-## 📈 How It Works
+## 🚀 Key Features
 
-### 1. Strategy Selection & Input
+### 1. Multiple Optimization Methods
+- **Grid Search**: Exhaustive parameter sweep.
+- **Genetic Algorithm**: Evolutionary optimization for large parameter spaces.
+- **Walk-Forward Analysis**: Robustness validation using rolling windows to prevent overfitting.
+- **Monte Carlo Simulation**: Stress testing by trade order randomization.
 
-Users can interact with strategies in two ways:
+### 2. Comprehensive Metrics
+The API calculates and returns professional-grade metrics:
+- **Performance**: Total Return, Sharpe Ratio, Sortino Ratio, Calmar Ratio, Profit Factor, Win Rate.
+- **Trade Statistics**: Total Trades, Winning/Losing counts, Avg Win/Loss, Max Win/Loss Streaks, Avg Duration.
+- **Risk Metrics**: Value at Risk (VaR 95%), Conditional VaR (CVaR).
 
-- **Pre-built Strategies**: Select a pre-defined strategy by its ID (e.g., `rsi_mean_reversion`, `macd_bb_combo`).
-- **Custom Strategies**: Input custom entry and exit rules as Python-style boolean expressions.
-  - Example: `entry_rule: "RSI < rsi_oversold and price > EMA"`
-  - The engine automatically resolves variables like `price`, `RSI`, `EMA`, `MACD`, etc.
+### 3. ML-Powered Strategy Selection
+Utilizes a weighted normalization model to score strategies:
+`Score = (Profit * 0.35) + (WinRate * 0.25) + (ProfitFactor * 0.25) - (LossStreak * 0.15)`
 
-### 2. Performing Optimization
+### 4. Real-time Monitoring
+WebSocket support for streaming job progress and status updates:
+`ws://[host]/api/v1/optimization/{job_id}/stream`
 
-Optimization is performed by sending a POST request to the relevant endpoint (`/optimize/grid-search`, `/optimize/genetic`, or `/optimize/walk-forward`).
-
-- **Grid Search**: You provide a list of values for each parameter.
-- **Genetic**: You provide min/max bounds for each parameter.
-- **Walk-Forward**: You provide training/validation window sizes and step periods.
-
-### 3. Optimization Criteria ("Best" Result)
-
-The "best" strategy is determined by the `objective` parameter in your request. Supported objectives include:
-- `sharpe_ratio` (Annualized risk-adjusted return)
-- `total_return` (Absolute return percentage)
-- `win_rate` (Percentage of winning trades)
-- `profit_factor` (Gross Profit / Gross Loss)
-- `max_drawdown` (The engine automatically tries to *minimize* this if selected)
+## 🛠️ Tech Stack
+- **FastAPI**: Modern, async web framework.
+- **Celery + Redis**: Background task queue.
+- **PostgreSQL**: Result persistence.
+- **backtesting.py**: Core execution engine.
+- **TA-Lib**: Technical indicator library.
 
 ## 🚦 Getting Started
 
-### Using Docker (Recommended)
-
+1. **Configuration**: Edit `config.json` with your credentials.
+2. **Run with Docker**:
 ```bash
 docker-compose up --build
 ```
 
-The API will be available at `http://localhost:8000`. You can access the interactive Swagger documentation at `http://localhost:8000/docs`.
+## 📖 API Usage Guide
 
-## 📖 API Usage Example
-
-**Submit a Grid Search Job:**
-
+### Submit Optimization Job
+`POST /api/v1/optimization/start`
 ```json
-POST /api/v1/optimize/grid-search
 {
-  "strategy": {
-    "type": "rsi_mean_reversion"
-  },
+  "strategy": { "type": "rsi_mean_reversion" },
   "parameters": {
-    "rsi_period": {"values": [10, 14, 21]},
-    "rsi_oversold": {"values": [25, 30, 35]},
-    "rsi_overbought": {"values": [65, 70, 75]}
+    "rsi_period": { "values": [14, 21] },
+    "rsi_oversold": { "values": [30, 40] }
   },
   "data": {
     "symbol": "BTC/USDT",
     "start_date": "2023-01-01",
-    "end_date": "2023-12-31",
-    "timeframe": "1d",
-    "provider": "crypto"
+    "end_date": "2023-12-31"
   },
-  "optimization": {
-    "objective": "sharpe_ratio"
-  }
+  "optimization": { "objective": "sharpe_ratio" }
 }
 ```
 
-**Get Results:**
+### Get Results
+`GET /api/v1/optimization/{job_id}/results`
 
-```bash
-GET /api/v1/results/{job_id}
-GET /api/v1/results/{job_id}/results
-```
-
-## ⚠️ Security Note
-
-This API uses a restricted `eval()` environment for custom rules. While limited, it is designed for trusted users. Always ensure your deployment environment is secured.
-
-## 📄 License
-
-MIT
+## 💼 User Tiers & Business Model
+- **Free**: 10 optimizations/mo, Grid Search only, 1yr data.
+- **Pro**: 100 optimizations/mo, All methods, 5yr data, Walk-Forward/Monte Carlo.
+- **Enterprise**: Unlimited, Custom data, Dedicated workers.

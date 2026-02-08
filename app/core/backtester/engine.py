@@ -173,19 +173,59 @@ class BacktestingEngine:
         else:
             avg_trade_duration_days = 0.0
 
+        trades = stats._trades if hasattr(stats, '_trades') else pd.DataFrame()
+        winning_trades = trades[trades['PnL'] > 0] if not trades.empty else pd.DataFrame()
+        losing_trades = trades[trades['PnL'] <= 0] if not trades.empty else pd.DataFrame()
+
+        # Calculate streaks
+        win_streak = 0
+        max_win_streak = 0
+        loss_streak = 0
+        max_loss_streak = 0
+
+        if not trades.empty:
+            pnl_list = trades['PnL'].tolist()
+            curr_win = 0
+            curr_loss = 0
+            for pnl in pnl_list:
+                if pnl > 0:
+                    curr_win += 1
+                    curr_loss = 0
+                else:
+                    curr_loss += 1
+                    curr_win = 0
+                max_win_streak = max(max_win_streak, curr_win)
+                max_loss_streak = max(max_loss_streak, curr_loss)
+
         results = {
             'total_return': (stats['Return [%]'] / 100),
             'sharpe_ratio': stats.get('Sharpe Ratio', 0) if not pd.isna(stats.get('Sharpe Ratio')) else 0,
+            'sortino_ratio': stats.get('Sortino Ratio', 0) if not pd.isna(stats.get('Sortino Ratio')) else 0,
+            'calmar_ratio': stats.get('Calmar Ratio', 0) if not pd.isna(stats.get('Calmar Ratio')) else 0,
             'max_drawdown': abs(stats['Max. Drawdown [%]'] / 100),
             'win_rate': (stats.get('Win Rate [%]', 0) / 100) if not pd.isna(stats.get('Win Rate [%]')) else 0,
             'profit_factor': stats.get('Profit Factor', 0) if not pd.isna(stats.get('Profit Factor')) else 0,
-            'total_trades': stats['# Trades'],
+            'total_trades': int(stats['# Trades']),
+            'winning_trades': len(winning_trades),
+            'losing_trades': len(losing_trades),
+            'avg_win': winning_trades['PnL'].mean() if not winning_trades.empty else 0,
+            'avg_loss': losing_trades['PnL'].mean() if not losing_trades.empty else 0,
+            'max_win_streak': max_win_streak,
+            'max_loss_streak': max_loss_streak,
             'avg_trade_duration': avg_trade_duration_days,
             'equity_curve': stats._equity_curve.to_dict('records'),
-            'trades': stats._trades.to_dict('records') if hasattr(stats, '_trades') else []
+            'trades': trades.to_dict('records') if not trades.empty else [],
+            'risk_metrics': self._calculate_risk(stats._equity_curve)
         }
 
         return results
+
+    def _calculate_risk(self, equity_curve: pd.DataFrame) -> Dict[str, float]:
+        if equity_curve.empty:
+            return {}
+        returns = equity_curve['Equity'].pct_change().dropna()
+        from app.core.backtester.metrics import calculate_risk_metrics
+        return calculate_risk_metrics(returns)
 
     def calculate_metrics(self, returns: pd.Series) -> Dict[str, float]:
         """Calculate performance metrics from return series"""

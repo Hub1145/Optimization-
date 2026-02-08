@@ -125,11 +125,16 @@ class WalkForwardOptimizer:
         else:
             stability = 0
 
+        # Robustness score (combination of degradation and stability)
+        robustness_score = stability * (1 - abs(1 - degradation))
+
         return {
             'in_sample_performance': avg_in_sample,
             'out_of_sample_performance': avg_out_sample,
             'degradation_factor': degradation,
             'stability_score': stability,
+            'robustness_score': robustness_score,
+            'is_robust': robustness_score > 0.6,
             'periods': period_details
         }
 
