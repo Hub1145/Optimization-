@@ -46,12 +46,13 @@ class BacktestingEngine:
 
         return df
 
-    def create_strategy_class(self, entry_rule: str, exit_rule: str,
+    def create_strategy_class(self, strategy_type: str, entry_rule: str, exit_rule: str,
                              parameters: Dict[str, Any]) -> type:
         """
-        Dynamically create a Strategy class from rules and parameters
+        Dynamically create or retrieve a Strategy class from rules and parameters
 
         Args:
+            strategy_type: Name of pre-built strategy or 'custom'
             entry_rule: Entry condition (e.g., "RSI < {rsi_threshold}")
             exit_rule: Exit condition
             parameters: Dict of parameter values
@@ -59,6 +60,16 @@ class BacktestingEngine:
         Returns:
             Strategy class
         """
+        from app.core.strategies import get_strategy_class
+        prebuilt_class = get_strategy_class(strategy_type)
+
+        if prebuilt_class:
+            class WrappedStrategy(prebuilt_class):
+                pass
+            for k, v in parameters.items():
+                setattr(WrappedStrategy, k, v)
+            return WrappedStrategy
+
         class DynamicStrategy(Strategy):
             # Inject parameters as class attributes
             params = parameters

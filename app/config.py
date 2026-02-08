@@ -1,7 +1,9 @@
-from pydantic_settings import BaseSettings
+import json
+import os
+from pydantic import BaseModel
 from typing import Optional
 
-class Settings(BaseSettings):
+class Settings(BaseModel):
     PROJECT_NAME: str = "StrategyOptimizer API"
     API_V1_STR: str = "/api/v1"
 
@@ -18,9 +20,21 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "secret"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    @classmethod
+    def load(cls):
+        config_data = {}
+        config_path = "config.json"
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                config_data = json.load(f)
+
+        # Override with environment variables if present
+        for field in cls.model_fields:
+            env_val = os.getenv(field.upper())
+            if env_val:
+                config_data[field] = env_val
+
+        return cls(**config_data)
 
     @property
     def database_url(self) -> str:
@@ -28,4 +42,4 @@ class Settings(BaseSettings):
             return self.SQLALCHEMY_DATABASE_URI
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
 
-settings = Settings()
+settings = Settings.load()

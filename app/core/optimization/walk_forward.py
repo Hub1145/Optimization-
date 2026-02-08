@@ -78,8 +78,9 @@ class WalkForwardOptimizer:
             # Test on validation data
             val_engine = BacktestingEngine(val_data, self.capital, self.commission, self.slippage)
             strategy_class = val_engine.create_strategy_class(
-                self.strategy_definition['entry_rule'],
-                self.strategy_definition['exit_rule'],
+                self.strategy_definition.get('type', 'custom'),
+                self.strategy_definition.get('entry_rule'),
+                self.strategy_definition.get('exit_rule'),
                 best_params
             )
             val_result = val_engine.run_backtest(strategy_class)

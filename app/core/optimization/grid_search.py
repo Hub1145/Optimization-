@@ -82,7 +82,11 @@ class GridSearchOptimizer:
             }
 
         # Sort by objective
-        results.sort(key=lambda x: x['performance'].get(objective, 0), reverse=True)
+        reverse = True
+        if objective in ['max_drawdown']:
+            reverse = False
+
+        results.sort(key=lambda x: x['performance'].get(objective, 0), reverse=reverse)
 
         # Store results
         self.results = results
@@ -105,8 +109,9 @@ class GridSearchOptimizer:
             )
 
             strategy_class = engine.create_strategy_class(
-                self.strategy_definition['entry_rule'],
-                self.strategy_definition['exit_rule'],
+                self.strategy_definition.get('type', 'custom'),
+                self.strategy_definition.get('entry_rule'),
+                self.strategy_definition.get('exit_rule'),
                 params
             )
 

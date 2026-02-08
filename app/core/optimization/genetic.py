@@ -98,8 +98,9 @@ class GeneticOptimizer:
         # Re-evaluate best to get full stats
         engine = BacktestingEngine(self.data, self.capital, self.commission, self.slippage)
         strategy_class = engine.create_strategy_class(
-            self.strategy_definition['entry_rule'],
-            self.strategy_definition['exit_rule'],
+            self.strategy_definition.get('type', 'custom'),
+            self.strategy_definition.get('entry_rule'),
+            self.strategy_definition.get('exit_rule'),
             best_params
         )
         result = engine.run_backtest(strategy_class)
@@ -128,12 +129,17 @@ class GeneticOptimizer:
 
             engine = BacktestingEngine(self.data, self.capital, self.commission, self.slippage)
             strategy_class = engine.create_strategy_class(
-                self.strategy_definition['entry_rule'],
-                self.strategy_definition['exit_rule'],
+                self.strategy_definition.get('type', 'custom'),
+                self.strategy_definition.get('entry_rule'),
+                self.strategy_definition.get('exit_rule'),
                 params
             )
             result = engine.run_backtest(strategy_class)
 
-            return (result.get(objective, 0.0),)
+            val = result.get(objective, 0.0)
+            if objective in ['max_drawdown']:
+                val = -val # Minimize drawdown
+
+            return (val,)
         except:
             return (0.0,)  # Return 0 fitness on error

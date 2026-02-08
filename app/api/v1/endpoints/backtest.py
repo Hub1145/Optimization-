@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.models.schemas import StrategyDefinition, DataConfig, PerformanceMetrics
 from app.services.market_data import MarketDataService
 from app.core.backtesting.engine import BacktestingEngine
+from app.core.strategies import get_strategy_class
 import pandas as pd
 
 router = APIRouter()
@@ -29,7 +30,9 @@ async def run_single_backtest(
         raise HTTPException(status_code=404, detail="No data found for symbol")
 
     engine = BacktestingEngine(df, capital, commission, slippage)
+
     strategy_class = engine.create_strategy_class(
+        strategy.type,
         strategy.entry_rule,
         strategy.exit_rule,
         parameters

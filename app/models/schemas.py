@@ -5,9 +5,9 @@ from app.models.enums import JobStatus, OptimizationType, Objective, Timeframe
 
 # Request schemas
 class StrategyDefinition(BaseModel):
-    type: str = Field(..., description="Strategy type (e.g., 'rsi_mean_reversion')")
-    entry_rule: str = Field(..., description="Entry rule with {parameter} placeholders")
-    exit_rule: str = Field(..., description="Exit rule with {parameter} placeholders")
+    type: str = Field(..., description="Strategy type (e.g., 'rsi_mean_reversion' or 'custom')")
+    entry_rule: Optional[str] = Field(None, description="Entry rule for custom strategy")
+    exit_rule: Optional[str] = Field(None, description="Exit rule for custom strategy")
 
 class ParameterRange(BaseModel):
     """For grid search - discrete values"""

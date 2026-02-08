@@ -2,6 +2,7 @@ from app.workers.celery_app import celery_app
 from app.core.optimization.grid_search import GridSearchOptimizer
 from app.core.optimization.genetic import GeneticOptimizer
 from app.core.optimization.walk_forward import WalkForwardOptimizer
+from app.core.strategies import get_strategy_class
 from app.services.market_data import MarketDataService
 from app.models.database import OptimizationJob, OptimizationResult, WalkForwardPeriod, EquityCurve
 from app.models.enums import JobStatus
