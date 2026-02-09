@@ -66,6 +66,13 @@ WebSocket support for streaming job progress and status updates:
 ```bash
 docker-compose up --build
 ```
+3. **Run Manually**:
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+The API will be available at `http://localhost:5000`. You can access the interactive Swagger documentation at `http://localhost:5000/docs`.
 
 ## 📖 API Usage Guide
 
