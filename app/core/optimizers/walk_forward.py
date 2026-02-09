@@ -2,8 +2,8 @@ from typing import Dict, List, Any
 import pandas as pd
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from app.core.optimization.grid_search import GridSearchOptimizer
-from app.core.backtesting.engine import BacktestingEngine
+from app.core.optimizers.grid_search import GridSearchOptimizer
+from app.core.backtester.engine import BacktestingEngine
 
 class WalkForwardOptimizer:
     """Walk-forward optimization to prevent overfitting"""
@@ -94,7 +94,7 @@ class WalkForwardOptimizer:
                 'win_rate': val_result['win_rate'],
                 'profit_factor': val_result['profit_factor'],
                 'total_trades': val_result['total_trades'],
-                'avg_trade_duration_days': val_result['avg_trade_duration']
+                'avg_trade_duration_days': val_result['avg_trade_duration_days']
             })
 
             period_details.append({

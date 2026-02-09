@@ -1,7 +1,7 @@
 from app.workers.celery_app import celery_app
-from app.core.optimization.grid_search import GridSearchOptimizer
-from app.core.optimization.genetic import GeneticOptimizer
-from app.core.optimization.walk_forward import WalkForwardOptimizer
+from app.core.optimizers.grid_search import GridSearchOptimizer
+from app.core.optimizers.genetic import GeneticOptimizer
+from app.core.optimizers.walk_forward import WalkForwardOptimizer
 from app.core.strategies import get_strategy_class
 from app.services.market_data import MarketDataService
 from app.models.database import OptimizationJob, OptimizationResult, WalkForwardPeriod, EquityCurve
@@ -113,7 +113,15 @@ def run_grid_search(job_id, request_data):
 @celery_app.task(name="run_genetic_optimization")
 def run_genetic_optimization(job_id, request_data):
     logger.info(f"Starting genetic optimization for job {job_id}")
+    db = SessionLocal()
     try:
+        # Update job status
+        job = db.query(OptimizationJob).filter(OptimizationJob.id == job_id).first()
+        if job:
+            job.status = JobStatus.RUNNING
+            job.started_at = datetime.utcnow()
+            db.commit()
+
         data_config = request_data['data']
         df = get_data_sync(data_config)
 
@@ -134,15 +142,48 @@ def run_genetic_optimization(job_id, request_data):
             objective=request_data['optimization']['objective']
         )
 
+        # Save result to DB
+        opt_result = OptimizationResult(
+            job_id=job_id,
+            parameters=result['best_parameters'],
+            total_return=result['best_performance']['total_return'],
+            sharpe_ratio=result['best_performance']['sharpe_ratio'],
+            max_drawdown=result['best_performance']['max_drawdown'],
+            win_rate=result['best_performance']['win_rate'],
+            profit_factor=result['best_performance']['profit_factor'],
+            total_trades=result['best_performance']['total_trades'],
+            avg_trade_duration_days=result['best_performance']['avg_trade_duration_days'],
+            is_best=True
+        )
+        db.add(opt_result)
+
+        job.status = JobStatus.COMPLETED
+        job.completed_at = datetime.utcnow()
+        db.commit()
+
         return result
     except Exception as e:
         logger.error(f"Error in genetic optimization: {e}")
+        if job:
+            job.status = JobStatus.FAILED
+            job.error_message = str(e)
+            db.commit()
         return {"error": str(e)}
+    finally:
+        db.close()
 
 @celery_app.task(name="run_walk_forward")
 def run_walk_forward(job_id, request_data):
     logger.info(f"Starting walk-forward for job {job_id}")
+    db = SessionLocal()
     try:
+        # Update job status
+        job = db.query(OptimizationJob).filter(OptimizationJob.id == job_id).first()
+        if job:
+            job.status = JobStatus.RUNNING
+            job.started_at = datetime.utcnow()
+            db.commit()
+
         data_config = request_data['data']
         df = get_data_sync(data_config)
 
@@ -165,7 +206,32 @@ def run_walk_forward(job_id, request_data):
             objective=request_data['optimization']['objective']
         )
 
+        # Save walk-forward periods
+        for p in result['periods']:
+            wf_period = WalkForwardPeriod(
+                job_id=job_id,
+                period_number=p['period_number'],
+                training_start=p['training_start'],
+                training_end=p['training_end'],
+                validation_start=p['validation_start'],
+                validation_end=p['validation_end'],
+                best_parameters=p['best_parameters'],
+                in_sample_sharpe=p['in_sample_sharpe'],
+                out_sample_sharpe=p['out_sample_sharpe']
+            )
+            db.add(wf_period)
+
+        job.status = JobStatus.COMPLETED
+        job.completed_at = datetime.utcnow()
+        db.commit()
+
         return result
     except Exception as e:
         logger.error(f"Error in walk-forward: {e}")
+        if job:
+            job.status = JobStatus.FAILED
+            job.error_message = str(e)
+            db.commit()
         return {"error": str(e)}
+    finally:
+        db.close()

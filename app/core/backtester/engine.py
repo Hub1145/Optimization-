@@ -212,7 +212,7 @@ class BacktestingEngine:
             'avg_loss': losing_trades['PnL'].mean() if not losing_trades.empty else 0,
             'max_win_streak': max_win_streak,
             'max_loss_streak': max_loss_streak,
-            'avg_trade_duration': avg_trade_duration_days,
+            'avg_trade_duration_days': avg_trade_duration_days,
             'equity_curve': stats._equity_curve.to_dict('records'),
             'trades': trades.to_dict('records') if not trades.empty else [],
             'risk_metrics': self._calculate_risk(stats._equity_curve)

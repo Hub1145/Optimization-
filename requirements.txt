@@ -18,7 +18,6 @@ scipy
 
 # Market Data
 ccxt
-yfinance
 
 # Optimization Algorithms
 scikit-optimize
@@ -52,6 +51,7 @@ python-multipart
 python-dotenv
 httpx
 aiofiles
+nest-asyncio
 cachetools
 
 # Testing

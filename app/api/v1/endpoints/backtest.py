@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.schemas import StrategyDefinition, DataConfig, PerformanceMetrics
 from app.services.market_data import MarketDataService
-from app.core.backtesting.engine import BacktestingEngine
+from app.core.backtester.engine import BacktestingEngine
 from app.core.strategies import get_strategy_class
 from app.utils.validators import validate_date_range
 from app.config import settings

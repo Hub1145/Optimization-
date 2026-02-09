@@ -3,7 +3,7 @@ import numpy as np
 from deap import base, creator, tools, algorithms
 from typing import Dict, List, Any, Tuple
 import pandas as pd
-from app.core.backtesting.engine import BacktestingEngine
+from app.core.backtester.engine import BacktestingEngine
 
 class GeneticOptimizer:
     """Genetic algorithm for strategy optimization"""
@@ -114,7 +114,7 @@ class GeneticOptimizer:
                 'win_rate': result['win_rate'],
                 'profit_factor': result['profit_factor'],
                 'total_trades': result['total_trades'],
-                'avg_trade_duration_days': result['avg_trade_duration']
+                'avg_trade_duration_days': result['avg_trade_duration_days']
             }
         }
 

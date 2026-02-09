@@ -3,7 +3,7 @@ from typing import Dict, List, Any, Callable
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
-from app.core.backtesting.engine import BacktestingEngine
+from app.core.backtester.engine import BacktestingEngine
 
 class GridSearchOptimizer:
     """Grid search parameter optimization"""
@@ -126,7 +126,7 @@ class GridSearchOptimizer:
                     'win_rate': result['win_rate'],
                     'profit_factor': result['profit_factor'],
                     'total_trades': result['total_trades'],
-                    'avg_trade_duration_days': result['avg_trade_duration']
+                    'avg_trade_duration_days': result['avg_trade_duration_days']
                 },
                 'equity_curve': result['equity_curve']
             }

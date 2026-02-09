@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import optimize, backtest, strategies, results, health
+from app.api.v1.endpoints import optimize, backtest, strategies, health
 
 api_router = APIRouter()
 api_router.include_router(optimize.router, prefix="/optimization", tags=["optimization"])
